@@ -19,7 +19,7 @@ jobs:
       - name: Set up Snyk CLI
         uses: snyk/actions/setup@v1
         env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          SNYK_TOKEN: ${{ secrets.e7fa8bf4-3841-47dd-a2b9-d3ef20c1a796 }}
 
       - name: Run Snyk IaC Scan
         run: snyk iac test --json-file-output=snyk-results.json || echo "No IaC issues found"
