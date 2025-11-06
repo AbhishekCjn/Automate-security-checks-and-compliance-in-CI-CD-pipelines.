@@ -1,0 +1,49 @@
+name: Security Summary Report
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '30 5 * * 1-5'  # Generate summary after scans complete
+  workflow_run:
+    workflows: ["Security Scan (Snyk)", "Infrastructure Compliance (tfsec)"]
+    types:
+      - completed
+
+jobs:
+  summary:
+    name: generate-security-summary
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./results
+
+      - name: Generate Security Compliance Summary
+        run: |
+          echo "### 🧩 Security Compliance Summary" > summary.md
+          echo "" >> summary.md
+          echo "#### 🔹 Snyk IaC Scan Results:" >> summary.md
+          if [ -f results/snyk-iac-results/snyk-results.json ]; then
+            jq '.vulnerabilities | group_by(.severity) | map({(.[0].severity): length}) | add' results/snyk-iac-results/snyk-results.json >> summary.md
+          else
+            echo "No Snyk results found." >> summary.md
+          fi
+          echo "" >> summary.md
+          echo "#### 🔹 tfsec Compliance Results:" >> summary.md
+          if [ -f results/tfsec-scan-results/tfsec-results.json ]; then
+            jq '.results | group_by(.severity) | map({(.[0].severity): length}) | add' results/tfsec-scan-results/tfsec-results.json >> summary.md
+          else
+            echo "No tfsec results found." >> summary.md
+          fi
+          cat summary.md
+
+      - name: Upload Compliance Summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: compliance-summary
+          path: summary.md
