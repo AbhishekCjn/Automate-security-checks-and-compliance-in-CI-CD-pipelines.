@@ -17,7 +17,10 @@ jobs:
 
       - name: Install tfsec
         run: |
-          curl -s https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install.sh | bash
+          echo "🔹 Downloading tfsec..."
+          curl -L -o tfsec.tar.gz https://github.com/aquasecurity/tfsec/releases/latest/download/tfsec-linux-amd64.tar.gz
+          tar -xzf tfsec.tar.gz
+          sudo mv tfsec /usr/local/bin/tfsec
           tfsec --version
 
       - name: Run tfsec and generate JSON report
@@ -29,6 +32,7 @@ jobs:
 
       - name: Validate JSON output
         run: |
+          sudo apt-get install -y jq
           cat reports/tfsec-report.json | jq . > /dev/null || (echo "❌ Invalid JSON" && exit 1)
           echo "✅ JSON format verified."
 
